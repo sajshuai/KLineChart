@@ -10485,13 +10485,22 @@ var CrosshairHorizontalLabelView = /** @class */ (function (_super) {
                 shouldFormatBigNumber || (shouldFormatBigNumber = indicator.shouldFormatBigNumber);
             });
         }
+        // Get current price (last price)
+        var dataList = chartStore.getDataList();
+        var lastData = dataList[dataList.length - 1];
         var yAxisRange = yAxis.getRange();
         var text = yAxis.displayValueToText(yAxis.realValueToDisplayValue(yAxis.valueToRealValue(value, { range: yAxisRange }), { range: yAxisRange }), precision);
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ignore
-        if (shouldFormatBigNumber) {
-            text = chartStore.getInnerFormatter().formatBigNumber(text);
-        }
-        return chartStore.getDecimalFold().format(chartStore.getThousandsSeparator().format(text));
+        // Add price difference if in candle pane and we have valid data
+        var lastPrice = lastData.close;
+        var priceDiff = value - lastPrice;
+        var sign = priceDiff > 0 ? '+' : '';
+        var diffText = formatPrecision(priceDiff, precision);
+        var diffPercentage = (priceDiff / lastPrice * 100).toFixed(2);
+        // Append the difference to the text
+        text += "\n".concat(sign).concat(diffText, " (").concat(sign).concat(diffPercentage, "%)");
+        text = chartStore.getInnerFormatter().formatBigNumber(text);
+        text = chartStore.getDecimalFold().format(chartStore.getThousandsSeparator().format(text));
+        return text;
     };
     CrosshairHorizontalLabelView.prototype.getTextAttrs = function (text, _textWidth, crosshair, bounding, axis, _styles) {
         var yAxis = axis;
