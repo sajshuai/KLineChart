@@ -9583,10 +9583,9 @@ var CandleTooltipView = /** @class */ (function (_super) {
                 var yAxisBounding = pane.getYAxisWidget().getBounding();
                 rectWidth_1 += (rectBorderSize_1 * 2 + rectPaddingLeft + rectPaddingRight_1);
                 rectHeight_1 += (rectBorderSize_1 * 2 + rectPaddingTop + rectPaddingBottom);
-                var centerX = -1e3;
+                var centerX = 10000000;
                 var isPointer = rectPosition === 'pointer' && crosshair.paneId === PaneIdConstants.CANDLE;
                 var isLeft = ((_a = crosshair.realX) !== null && _a !== void 0 ? _a : 0) > centerX;
-                // const isLeft = (crosshair.realX ?? 0) > centerX
                 var rectX_1 = 0;
                 if (isPointer) {
                     var realX = crosshair.realX;

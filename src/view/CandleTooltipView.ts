@@ -235,7 +235,6 @@ export default class CandleTooltipView extends IndicatorTooltipView {
         const centerX = 10000000
         const isPointer = rectPosition === 'pointer' && crosshair.paneId === PaneIdConstants.CANDLE
         const isLeft = (crosshair.realX ?? 0) > centerX
-        // const isLeft = (crosshair.realX ?? 0) > centerX
         let rectX = 0
         if (isPointer) {
           const realX = crosshair.realX!
