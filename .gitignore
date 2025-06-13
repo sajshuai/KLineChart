@@ -2,7 +2,7 @@
 /.idea
 /.vscode
 /website
-/dist
+# /dist
 /docs/.vitepress/cache
 /docs/node_modules
 

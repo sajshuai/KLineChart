@@ -232,9 +232,9 @@ export default class CandleTooltipView extends IndicatorTooltipView {
         const yAxisBounding = pane.getYAxisWidget()!.getBounding()
         rectWidth += (rectBorderSize * 2 + rectPaddingLeft + rectPaddingRight)
         rectHeight += (rectBorderSize * 2 + rectPaddingTop + rectPaddingBottom)
-        const centerX = bounding.width / 2
+        const centerX = -1000
         const isPointer = rectPosition === 'pointer' && crosshair.paneId === PaneIdConstants.CANDLE
-        const isLeft = false
+        const isLeft = (crosshair.realX ?? 0) > centerX
         // const isLeft = (crosshair.realX ?? 0) > centerX
         let rectX = 0
         if (isPointer) {
