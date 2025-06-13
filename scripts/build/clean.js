@@ -8,7 +8,7 @@ const buildDir = resolvePath('dist')
 let totalFileCount = 0
 let deletedFileCount = 0
 
-function eachFiles (dir) {
+function eachFiles(dir) {
   if (fs.existsSync(dir)) {
     const files = fs.readdirSync(dir)
     files.forEach(file => {
@@ -22,7 +22,7 @@ function eachFiles (dir) {
   }
 }
 
-function deleteFiles (dir) {
+function deleteFiles(dir) {
   if (fs.existsSync(dir)) {
     const files = fs.readdirSync(dir)
     files.forEach(file => {
@@ -32,7 +32,12 @@ function deleteFiles (dir) {
       } else {
         fs.unlinkSync(path)
         deletedFileCount++
-        process.stdout.clearLine(process.stdout)
+        if (process.stdout.isTTY && typeof process.stdout.clearLine === 'function') {
+          process.stdout.clearLine(0);
+        } else {
+          // Fallback for non-TTY environments like CI
+          process.stdout.write('\n');
+        }
         process.stdout.cursorTo(0)
         const percent = `${Math.round(deletedFileCount / totalFileCount * 100)}%`
         process.stdout.write(`${styleText('blue', `${percent}(${deletedFileCount}/${totalFileCount}): ${file}`)}`, 'utf-8')
@@ -42,7 +47,7 @@ function deleteFiles (dir) {
   }
 }
 
-function clean () {
+function clean() {
   eachFiles(buildDir)
   deleteFiles(buildDir)
 
