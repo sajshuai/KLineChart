@@ -26,9 +26,10 @@ import type { TextAttrs } from '../extension/figure/text'
 import type ChartStore from '../Store'
 
 import View from './View'
+import { formatPrecision } from '../common/utils/format'
 
 export default class CrosshairHorizontalLabelView<C extends Axis = YAxis> extends View<C> {
-  override drawImp (ctx: CanvasRenderingContext2D): void {
+  override drawImp(ctx: CanvasRenderingContext2D): void {
     const widget = this.getWidget()
     const pane = widget.getPane()
     const chartStore = widget.getPane().getChart().getChartStore()
@@ -53,15 +54,15 @@ export default class CrosshairHorizontalLabelView<C extends Axis = YAxis> extend
     }
   }
 
-  protected compare (crosshair: Crosshair, paneId: string): boolean {
+  protected compare(crosshair: Crosshair, paneId: string): boolean {
     return crosshair.paneId === paneId
   }
 
-  protected getDirectionStyles (styles: CrosshairStyle): CrosshairDirectionStyle {
+  protected getDirectionStyles(styles: CrosshairStyle): CrosshairDirectionStyle {
     return styles.horizontal
   }
 
-  protected getText (crosshair: Crosshair, chartStore: ChartStore, axis: Axis): string {
+  protected getText(crosshair: Crosshair, chartStore: ChartStore, axis: Axis): string {
     const yAxis = axis as unknown as YAxis
     const value = axis.convertFromPixel(crosshair.y!)
     let precision = 0
@@ -75,6 +76,11 @@ export default class CrosshairHorizontalLabelView<C extends Axis = YAxis> extend
         shouldFormatBigNumber ||= indicator.shouldFormatBigNumber
       })
     }
+
+    // Get current price (last price)
+    const dataList = chartStore.getDataList()
+    const lastData = dataList[dataList.length - 1]
+
     const yAxisRange = yAxis.getRange()
     let text = yAxis.displayValueToText(
       yAxis.realValueToDisplayValue(
@@ -84,14 +90,26 @@ export default class CrosshairHorizontalLabelView<C extends Axis = YAxis> extend
       precision
     )
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ignore
+    // Add price difference if in candle pane and we have valid data
+    if (yAxis.isInCandle() && lastData) {
+      const lastPrice = lastData.close
+      const priceDiff = value - lastPrice
+      const sign = priceDiff > 0 ? '+' : ''
+      const diffText = formatPrecision(priceDiff, precision)
+      const diffPercentage = (priceDiff / lastPrice * 100).toFixed(2)
+
+      // Append the difference to the text
+      text += `\n${sign}${diffText} (${sign}${diffPercentage}%)`
+    }
+
     if (shouldFormatBigNumber) {
       text = chartStore.getInnerFormatter().formatBigNumber(text)
     }
-    return chartStore.getDecimalFold().format(chartStore.getThousandsSeparator().format(text))
+    text = chartStore.getDecimalFold().format(chartStore.getThousandsSeparator().format(text))
+    return text
   }
 
-  protected getTextAttrs (text: string, _textWidth: number, crosshair: Crosshair, bounding: Bounding, axis: Axis, _styles: StateTextStyle): TextAttrs {
+  protected getTextAttrs(text: string, _textWidth: number, crosshair: Crosshair, bounding: Bounding, axis: Axis, _styles: StateTextStyle): TextAttrs {
     const yAxis = axis as unknown as YAxis
     let x = 0
     let textAlign: CanvasTextAlign = 'left'
