@@ -10439,7 +10439,7 @@ var CrosshairHorizontalLabelView = /** @class */ (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     CrosshairHorizontalLabelView.prototype.drawImp = function (ctx) {
-        var _a;
+        var _a, _b;
         var widget = this.getWidget();
         var pane = widget.getPane();
         var chartStore = widget.getPane().getChart().getChartStore();
@@ -10454,14 +10454,48 @@ var CrosshairHorizontalLabelView = /** @class */ (function (_super) {
                     var axis = pane.getAxisComponent();
                     var text = this.getText(crosshair, chartStore, axis);
                     ctx.font = createFont(textStyles.size, textStyles.weight, textStyles.family);
+                    // Draw main price label
                     (_a = this.createFigure({
                         name: 'text',
                         attrs: this.getTextAttrs(text, ctx.measureText(text).width, crosshair, bounding, axis, textStyles),
                         styles: textStyles
                     })) === null || _a === void 0 ? void 0 : _a.draw(ctx);
+                    // Draw price difference (if in candle pane)
+                    var yAxis = axis;
+                    if (typeof yAxis.isInCandle === 'function' && yAxis.isInCandle()) {
+                        var diffText = this.getPriceDifferenceText(crosshair, chartStore, axis);
+                        if (diffText.length > 0) {
+                            var diffAttrs = this.getTextAttrs(diffText, ctx.measureText(diffText).width, crosshair, bounding, axis, textStyles);
+                            // Move down by approx one line height
+                            diffAttrs.y += textStyles.size * 1.5;
+                            // Color based on positive/negative
+                            var diffColor = diffText.startsWith('+') ? '#26A69A' : '#EF5350';
+                            (_b = this.createFigure({
+                                name: 'text',
+                                attrs: diffAttrs,
+                                styles: __assign(__assign({}, textStyles), { color: diffColor, backgroundColor: diffText.startsWith('+') ? 'rgba(38, 166, 154, 0.1)' : 'rgba(239, 83, 80, 0.1)' })
+                            })) === null || _b === void 0 ? void 0 : _b.draw(ctx);
+                        }
+                    }
                 }
             }
         }
+    };
+    CrosshairHorizontalLabelView.prototype.getPriceDifferenceText = function (crosshair, chartStore, axis) {
+        var value = axis.convertFromPixel(crosshair.y);
+        // Get current price (last price)
+        var dataList = chartStore.getDataList();
+        if (dataList.length === 0)
+            return '';
+        var lastData = dataList[dataList.length - 1];
+        var lastPrice = lastData.close;
+        var priceDiff = value - lastPrice;
+        var sign = priceDiff > 0 ? '+' : '';
+        // Format the difference as value and percentage
+        var diffPercentage = (priceDiff / lastPrice * 100).toFixed(2);
+        var diffText = "".concat(sign).concat(diffPercentage, "%");
+        diffText = chartStore.getDecimalFold().format(chartStore.getThousandsSeparator().format(diffText));
+        return diffText;
     };
     CrosshairHorizontalLabelView.prototype.compare = function (crosshair, paneId) {
         return crosshair.paneId === paneId;
@@ -10485,22 +10519,13 @@ var CrosshairHorizontalLabelView = /** @class */ (function (_super) {
                 shouldFormatBigNumber || (shouldFormatBigNumber = indicator.shouldFormatBigNumber);
             });
         }
-        // Get current price (last price)
-        var dataList = chartStore.getDataList();
-        var lastData = dataList[dataList.length - 1];
         var yAxisRange = yAxis.getRange();
         var text = yAxis.displayValueToText(yAxis.realValueToDisplayValue(yAxis.valueToRealValue(value, { range: yAxisRange }), { range: yAxisRange }), precision);
-        // Add price difference if in candle pane and we have valid data
-        var lastPrice = lastData.close;
-        var priceDiff = value - lastPrice;
-        var sign = priceDiff > 0 ? '+' : '';
-        var diffText = formatPrecision(priceDiff, precision);
-        var diffPercentage = (priceDiff / lastPrice * 100).toFixed(2);
-        // Append the difference to the text
-        text += "\n".concat(sign).concat(diffText, " (").concat(sign).concat(diffPercentage, "%)");
-        text = chartStore.getInnerFormatter().formatBigNumber(text);
-        text = chartStore.getDecimalFold().format(chartStore.getThousandsSeparator().format(text));
-        return text;
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ignore
+        if (shouldFormatBigNumber) {
+            text = chartStore.getInnerFormatter().formatBigNumber(text);
+        }
+        return chartStore.getDecimalFold().format(chartStore.getThousandsSeparator().format(text));
     };
     CrosshairHorizontalLabelView.prototype.getTextAttrs = function (text, _textWidth, crosshair, bounding, axis, _styles) {
         var yAxis = axis;

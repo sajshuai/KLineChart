@@ -26,7 +26,6 @@ import type { TextAttrs } from '../extension/figure/text'
 import type ChartStore from '../Store'
 
 import View from './View'
-import { formatPrecision } from '../common/utils/format'
 
 export default class CrosshairHorizontalLabelView<C extends Axis = YAxis> extends View<C> {
   override drawImp (ctx: CanvasRenderingContext2D): void {
@@ -44,14 +43,58 @@ export default class CrosshairHorizontalLabelView<C extends Axis = YAxis> extend
           const axis = pane.getAxisComponent()
           const text = this.getText(crosshair, chartStore, axis)
           ctx.font = createFont(textStyles.size, textStyles.weight, textStyles.family)
+
+          // Draw main price label
           this.createFigure({
             name: 'text',
             attrs: this.getTextAttrs(text, ctx.measureText(text).width, crosshair, bounding, axis, textStyles),
             styles: textStyles
           })?.draw(ctx)
+
+          // Draw price difference (if in candle pane)
+          const yAxis = axis as unknown as YAxis
+          if (typeof yAxis.isInCandle === 'function' && yAxis.isInCandle()) {
+            const diffText = this.getPriceDifferenceText(crosshair, chartStore, axis)
+            if (diffText.length > 0) {
+              const diffAttrs = this.getTextAttrs(diffText, ctx.measureText(diffText).width, crosshair, bounding, axis, textStyles)
+              // Move down by approx one line height
+              diffAttrs.y += textStyles.size * 1.5
+
+              // Color based on positive/negative
+              const diffColor = diffText.startsWith('+') ? '#26A69A' : '#EF5350'
+
+              this.createFigure({
+                name: 'text',
+                attrs: diffAttrs,
+                styles: { ...textStyles, color: diffColor, backgroundColor: diffText.startsWith('+') ? 'rgba(38, 166, 154, 0.1)' : 'rgba(239, 83, 80, 0.1)' }
+              })?.draw(ctx)
+            }
+          }
         }
       }
     }
+  }
+
+  protected getPriceDifferenceText (crosshair: Crosshair, chartStore: ChartStore, axis: Axis): string {
+    const value = axis.convertFromPixel(crosshair.y!)
+
+    // Get current price (last price)
+    const dataList = chartStore.getDataList()
+    if (dataList.length === 0) return ''
+
+    const lastData = dataList[dataList.length - 1]
+
+    const lastPrice = lastData.close
+    const priceDiff = value - lastPrice
+    const sign = priceDiff > 0 ? '+' : ''
+
+    // Format the difference as value and percentage
+    const diffPercentage = (priceDiff / lastPrice * 100).toFixed(2)
+
+    let diffText = `${sign}${diffPercentage}%`
+    diffText = chartStore.getDecimalFold().format(chartStore.getThousandsSeparator().format(diffText))
+
+    return diffText
   }
 
   protected compare (crosshair: Crosshair, paneId: string): boolean {
@@ -76,11 +119,6 @@ export default class CrosshairHorizontalLabelView<C extends Axis = YAxis> extend
         shouldFormatBigNumber ||= indicator.shouldFormatBigNumber
       })
     }
-
-    // Get current price (last price)
-    const dataList = chartStore.getDataList()
-    const lastData = dataList[dataList.length - 1]
-
     const yAxisRange = yAxis.getRange()
     let text = yAxis.displayValueToText(
       yAxis.realValueToDisplayValue(
@@ -90,19 +128,11 @@ export default class CrosshairHorizontalLabelView<C extends Axis = YAxis> extend
       precision
     )
 
-    // Add price difference if in candle pane and we have valid data
-    const lastPrice = lastData.close
-    const priceDiff = value - lastPrice
-    const sign = priceDiff > 0 ? '+' : ''
-    const diffText = formatPrecision(priceDiff, precision)
-    const diffPercentage = (priceDiff / lastPrice * 100).toFixed(2)
-
-    // Append the difference to the text
-    text += `\n${sign}${diffText} (${sign}${diffPercentage}%)`
-
-    text = chartStore.getInnerFormatter().formatBigNumber(text)
-    text = chartStore.getDecimalFold().format(chartStore.getThousandsSeparator().format(text))
-    return text
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ignore
+    if (shouldFormatBigNumber) {
+      text = chartStore.getInnerFormatter().formatBigNumber(text)
+    }
+    return chartStore.getDecimalFold().format(chartStore.getThousandsSeparator().format(text))
   }
 
   protected getTextAttrs (text: string, _textWidth: number, crosshair: Crosshair, bounding: Bounding, axis: Axis, _styles: StateTextStyle): TextAttrs {
