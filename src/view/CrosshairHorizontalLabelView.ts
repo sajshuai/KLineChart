@@ -66,7 +66,7 @@ export default class CrosshairHorizontalLabelView<C extends Axis = YAxis> extend
               this.createFigure({
                 name: 'text',
                 attrs: diffAttrs,
-                styles: { ...textStyles, color: diffColor, backgroundColor: diffText.startsWith('+') ? 'rgba(38, 166, 154, 0.1)' : 'rgba(239, 83, 80, 0.1)' }
+                styles: { ...textStyles, color: diffColor, backgroundColor: diffText.startsWith('+') ? 'rgba(38, 166, 154, 1)' : 'rgba(239, 83, 80, 1)' }
               })?.draw(ctx)
             }
           }

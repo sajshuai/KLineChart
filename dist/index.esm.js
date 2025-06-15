@@ -10468,7 +10468,7 @@ var CrosshairHorizontalLabelView = /** @class */ (function (_super) {
                             (_b = this.createFigure({
                                 name: 'text',
                                 attrs: diffAttrs,
-                                styles: __assign(__assign({}, textStyles), { color: diffColor, backgroundColor: diffText.startsWith('+') ? 'rgba(38, 166, 154, 0.1)' : 'rgba(239, 83, 80, 0.1)' })
+                                styles: __assign(__assign({}, textStyles), { color: diffColor, backgroundColor: diffText.startsWith('+') ? 'rgba(38, 166, 154, 1)' : 'rgba(239, 83, 80, 1)' })
                             })) === null || _b === void 0 ? void 0 : _b.draw(ctx);
                         }
                     }
