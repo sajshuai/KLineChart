@@ -61,12 +61,12 @@ export default class CrosshairHorizontalLabelView<C extends Axis = YAxis> extend
               diffAttrs.y += textStyles.size * 1.5
 
               // Color based on positive/negative
-              const diffColor = diffText.startsWith('+') ? '#26A69A' : '#EF5350'
+              // const diffColor = diffText.startsWith('+') ? '#26A69A' : '#EF5350'
 
               this.createFigure({
                 name: 'text',
                 attrs: diffAttrs,
-                styles: { ...textStyles, color: diffColor, backgroundColor: diffText.startsWith('+') ? 'rgba(38, 166, 154, 1)' : 'rgba(239, 83, 80, 1)' }
+                styles: { ...textStyles }
               })?.draw(ctx)
             }
           }

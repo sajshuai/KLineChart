@@ -10464,11 +10464,11 @@ var CrosshairHorizontalLabelView = /** @class */ (function (_super) {
                             // Move down by approx one line height
                             diffAttrs.y += textStyles.size * 1.5;
                             // Color based on positive/negative
-                            var diffColor = diffText.startsWith('+') ? '#26A69A' : '#EF5350';
+                            // const diffColor = diffText.startsWith('+') ? '#26A69A' : '#EF5350'
                             (_b = this.createFigure({
                                 name: 'text',
                                 attrs: diffAttrs,
-                                styles: __assign(__assign({}, textStyles), { color: diffColor, backgroundColor: diffText.startsWith('+') ? 'rgba(38, 166, 154, 1)' : 'rgba(239, 83, 80, 1)' })
+                                styles: __assign({}, textStyles)
                             })) === null || _b === void 0 ? void 0 : _b.draw(ctx);
                         }
                     }
